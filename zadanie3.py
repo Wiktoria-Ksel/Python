@@ -1,5 +1,7 @@
 import argparse
 import os
+import random
+import json
 
 MONTHS = (
     "january", "february", "march", "april", "may", "june",
@@ -143,16 +145,63 @@ def parse_arguments():
     }
 
 def create_csv(path):
-    print(f"Tworze {path}\n")
-    return 0
+    """
+    Creates csv file using 'random' module.
+    """
+
+    model = random.choice(["A", "B", "C"])
+    wynik = random.randint(0, 1000)
+    czas = random.randint(0, 1000)
+
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("Model; Wynik; Czas;\n")
+        f.write(f"{model}; {wynik}; {czas}s;\n")
+
 def read_csv(path):
-    print(f"Czytam {path}\n")
+    """
+    Reads csv file and returns 'Czas' if 'Model' is 'A' (otherwise return 0).
+    """
+
+    with open(path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+        if len(lines) >= 2:
+            data = lines[1].strip().split(";")
+
+            if data[0].strip() == "A" and len(data) >= 3:
+                return int(data[2].strip().removesuffix("s"))
+
     return 0
+
 def create_json(path):
-    print(f"Tworze {path}\n")
-    return 0
+    """
+    Creates json file using 'random' and 'json' modules with function 'json.dump'.
+    """
+
+    model = random.choice(["A", "B", "C"])
+    wynik = random.randint(0, 1000)
+    czas = random.randint(0, 1000)
+
+    data = {
+        "Model" : model,
+        "Wynik" : wynik,
+        "Czas" : f"{czas}s"
+    }
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4)
+
 def read_json(path):
-    print(f"Czytam {path}\n")
+    """
+    Reads json file and returns 'Czas' if 'Model' is 'A' (otherwise returns 0).
+    """
+
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+        if data.get("Model") == "A":
+            return int(data.get("Czas").removesuffix("s"))
+
     return 0
 
 def create_process(file_path, dir_path, file_format):
@@ -219,16 +268,5 @@ def main():
     if not args:
         return
     files_maker(args)
-    # Example use of args:
-    #
-    # if args["create"]:
-    #     print("Mode: create")
-    # else:
-    #     print("Mode: read")
-    # print("Format:", args["format"])
-    # print("Months:", args["months"])
-    # print("Days:", args["days"])
-    # print("Times of day:", args["time"])
-
 
 main()
