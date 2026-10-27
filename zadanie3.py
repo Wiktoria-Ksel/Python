@@ -48,8 +48,8 @@ def parse_day_range(value):
 
 def parse_arguments():
     """
-        days contains one expanded range per month. 
-        time contains one value per expanded day, 
+        days contains one expanded range per month.
+        time contains one value per expanded day,
         ordered first by month and then by day.
     """
     parser = argparse.ArgumentParser()
@@ -74,11 +74,17 @@ def parse_arguments():
     )
     parser.add_argument(
         "-c", "--create", action="store_const", const=True, default=False,
-        help="Select file creation. Cannot be combined with --read.",
+        help=(
+            "Select file creation. Cannot be combined with --read. "
+            + "Existing files are overwritten."
+        ),
     )
     parser.add_argument(
         "-r", "--read", action="store_const", const=True, default=False,
-        help="Select file reading (default).",
+        help=(
+            "Select file reading (default). Missing files contribute 0 to the total. "
+            + "Paths are relative to the current working directory."
+        ),
     )
     parser.add_argument(
         "--csv", action="store_const", const=True, default=False,
@@ -91,43 +97,38 @@ def parse_arguments():
 
     args = parser.parse_args()
     if not args.months or not args.days:
-        print("Error: provide both --months and --days. Use -h for help.")
-        return
+        parser.error("Provide both --months and --days. Use -h for help.")
     if len(args.months) != len(args.days):
-        print("Error: provide exactly one day range per month.")
-        return
+        parser.error("Provide exactly one day range per month.")
     if args.create and args.read:
-        print("Error: choose either --create or --read.")
-        return
+        parser.error("Choose either --create or --read.")
     if args.csv and args.json:
-        print("Error: choose either --csv or --json.")
-        return
+        parser.error("Choose either --csv or --json.")
 
     for month in args.months:
         if month not in MONTHS:
-            print("Error: invalid month:", month)
-            return
+            parser.error(f"Invalid month: {month}.")
 
     day_ranges = []
     day_count = 0
     for value in args.days:
         days = parse_day_range(value)
         if not days:
-            print("Error: invalid day range:", value)
-            print("Use lowercase day names in Monday-to-Sunday order, e.g. mon-fri.")
-            return
+            parser.error(
+                f"Invalid day range: {value}. Use Monday-to-Sunday order."
+            )
         day_ranges.append(days)
         day_count += len(days)
 
     if len(args.time) > day_count:
-        print("Error: more times of day were provided than days in the ranges.")
-        return
+        parser.error(
+            "More times of day were provided than days in the ranges."
+        )
 
     times = []
     for value in args.time:
         if value not in TIME_ALIASES:
-            print("Error: time of day must be m/morning or e/evening.")
-            return
+            parser.error("Time of day must be m/morning or e/evening.")
         times.append(TIME_ALIASES[value])
     while len(times) < day_count:
         times.append("morning")
@@ -263,10 +264,5 @@ def files_maker(args):
     if not args["create"]:
         print(f"Total time in all files with model A is {times_sum}")
 
-def main():
-    args = parse_arguments()
-    if not args:
-        return
-    files_maker(args)
-
-main()
+args = parse_arguments()
+files_maker(args)
